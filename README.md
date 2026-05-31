@@ -12,6 +12,13 @@ Este serviço centraliza funcionalidades relacionadas a identidade dos usuários
 
 A solução segue uma arquitetura em camadas inspirada em **Clean Architecture / DDD (Domain-Driven Design)**, visando facilitar manutenção, testes e evolução do sistema.
 
+## Executar via Docker
+Executar comando no cmd na raiz do projeto:
+	docker compose up --build
+
+A solução segue uma arquitetura em camadas inspirada em **Clean Architecture / DDD (Domain-Driven Design)**, visando facilitar manutenção, testes e evolução do sistema.
+
+
 ### Estrutura da solução
 
 ```txt

@@ -1,0 +1,46 @@
+version: '3.9'
+
+services:
+  auth-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: fiapgames-auth-api
+    ports:
+      - "8081:8081"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ConnectionStrings__FIAPGamesConnection: "server=mysql-auth;port=3306;database=fiapgames_auth;user=root;password=root123"
+      Jwt__Key: "ChaveSuperSecretaFiapGamesEAD12MuitoLongaParaGarantirSeguranca123!"
+      Jwt__Issuer: "FiapGamesApi"
+      Jwt__Audience: "FiapGamesClients"
+    depends_on:
+      mysql-auth:
+        condition: service_healthy
+    networks:
+      - fiapgames-network
+
+  mysql-auth:
+    image: mysql:8.4
+    container_name: fiapgames-auth-db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root123
+      MYSQL_DATABASE: fiapgames_auth
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql-auth-data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-proot123"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - fiapgames-network
+
+volumes:
+  mysql-auth-data:
+
+networks:
+  fiapgames-network:
