@@ -74,7 +74,7 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 builder.Services.AddDbContext<AuthContext>(opts =>
     opts
     .UseLazyLoadingProxies()
-    .UseMySql(connectionString, ServerVersion.AutoDetect(connectionString)));
+    .UseSqlServer(connectionString));
 
 builder.Services.AddControllers()
     .ConfigureApiBehaviorOptions(options =>
