@@ -1,5 +1,6 @@
 using Context;
 using Interfaces;
+using Messaging;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
@@ -9,6 +10,7 @@ using Repository;
 using Services;
 using System.Net;
 using System.Text;
+using RabbitMQ.Client;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -18,9 +20,19 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
+builder.Services.AddSingleton<IConnectionFactory>(sp => new ConnectionFactory
+{
+    HostName = "localhost",
+    Port = 5672,
+    UserName = "guest",
+    Password = "guest"
+});
+
+
 builder.Services.AddScoped<ILoginRepository, LoginRepository>();
 builder.Services.AddScoped<ILoginService, LoginService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IMessagePublisher, RabbitMqPublisher>();
 
 var connectionString = builder.Configuration.GetConnectionString("FIAPGamesConnection");
 
