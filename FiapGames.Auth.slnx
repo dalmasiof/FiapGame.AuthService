@@ -1,5 +1,8 @@
 <Solution>
   <Folder Name="/src/">
+    <File Path=".dockerignore" />
+    <File Path="docker-compose.yml" />
+    <File Path="Dockerfile" />
     <Project Path="src/1-Auth.Api/1-Auth.Api.csproj" />
     <Project Path="src/2-Auth.Application/2-Auth.Application.csproj" />
     <Project Path="src/3-Auth.Infrastructure/3-Auth.Infrastructure.csproj" />

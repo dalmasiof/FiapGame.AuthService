@@ -1,10 +1,11 @@
 ﻿using DTOs;
 using Entities;
+using IntegrationEvents;
 using Interfaces;
 
 namespace Services
 {
-    public class LoginService(ILoginRepository loginRepository) : ILoginService
+    public class LoginService(ILoginRepository loginRepository, IMessagePublisher _publisher) : ILoginService
     {
         public async Task<CriarLoginDTO> CriarLogin(CriarLoginDTO loginDTO)
         {
@@ -13,6 +14,16 @@ namespace Services
             var novoLogin = new Login(loginDTO.Nome, loginDTO.Email, senhaHash, (int)loginDTO.TipoUsuario);
 
             await loginRepository.AdicionarLogin(novoLogin);
+
+            var eventoNotificacao = new NotificacaoIntegrationEvent(
+                CorrelacaoId: Guid.NewGuid(),
+                Destinatario: novoLogin.Email,
+                Assunto: "Bem-vindo ao FiapGames!",
+                CorpoMensagem: $"Olá {novoLogin.Nome}, sua conta foi criada com sucesso.",
+                DominioOrigem: "Autenticacao"
+        );
+
+            await _publisher.PublishAsync(eventoNotificacao, routingKey: "autenticacao.notificacao", eventoNotificacao.RastreioId);
 
             return loginDTO;
         }
