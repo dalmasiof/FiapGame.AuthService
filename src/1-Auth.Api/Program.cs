@@ -20,14 +20,18 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
+var rabbitMqHost = builder.Configuration["RabbitMq:HostName"] ?? "localhost";
+var rabbitMqPort = int.Parse(builder.Configuration["RabbitMq:Port"] ?? "5672");
+var rabbitMqUser = builder.Configuration["RabbitMq:UserName"] ?? "guest";
+var rabbitMqPassword = builder.Configuration["RabbitMq:Password"] ?? "guest";
+
 builder.Services.AddSingleton<IConnectionFactory>(sp => new ConnectionFactory
 {
-    HostName = "localhost",
-    Port = 5672,
-    UserName = "guest",
-    Password = "guest"
+    HostName = rabbitMqHost,
+    Port = rabbitMqPort,
+    UserName = rabbitMqUser,
+    Password = rabbitMqPassword
 });
-
 
 builder.Services.AddScoped<ILoginRepository, LoginRepository>();
 builder.Services.AddScoped<ILoginService, LoginService>();
