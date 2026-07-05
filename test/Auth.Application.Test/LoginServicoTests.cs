@@ -9,12 +9,14 @@ namespace Auth.Application.Test
     public class LoginServicoTests
     {
         private readonly Mock<ILoginRepository> _repoMock;
+        private readonly Mock<IMessagePublisher> _publisherMock;
         private readonly LoginService _service;
 
         public LoginServicoTests()
         {
             _repoMock = new Mock<ILoginRepository>();
-            _service = new LoginService(_repoMock.Object);
+            _publisherMock = new Mock<IMessagePublisher>();
+            _service = new LoginService(_repoMock.Object, _publisherMock.Object);
         }
 
         [Fact]

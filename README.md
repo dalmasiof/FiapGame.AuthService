@@ -170,6 +170,20 @@ Esse ambiente sobe a API e o SQL Server. A aplicação também está preparada p
 
 ---
 
+## Kubernetes (autonomia por serviço)
+
+Manifests próprios do serviço estão em `k8s/`:
+
+- `auth-api-configmap.yaml`
+- `auth-api-secret.yaml`
+- `auth-api-service.yaml`
+- `auth-api-deployment.yaml`
+
+Configurações não sensíveis ficam em ConfigMap (ambiente, issuer/audience e host/porta de RabbitMQ).
+Dados sensíveis ficam em Secret (connection string completa, chave JWT e credenciais de RabbitMQ).
+
+---
+
 ## Migrations
 
 Criar uma migration:
