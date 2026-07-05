@@ -1,34 +1,27 @@
 # FiapGames.Auth
 
-Microserviço responsável pela autenticação, autorização e gerenciamento de usuários da plataforma **FiapGames**.
+Microserviço responsável por autenticação, autorização e gerenciamento de usuários da plataforma FiapGames.
 
-Este serviço centraliza funcionalidades relacionadas a identidade dos usuários, emissão e validação de tokens JWT, login, cadastro e manutenção de contas da plataforma.
+Este serviço centraliza funcionalidades de identidade, emissão e validação de tokens JWT, login, cadastro e manutenção de contas do ecossistema.
 
-> **Objetivo:** fornecer uma base reutilizável e padronizada para microsserviços do ecossistema FiapGames, seguindo princípios de Clean Architecture, separação de responsabilidades e baixo acoplamento.
+> Objetivo: fornecer uma base reutilizável e padronizada para microsserviços, seguindo princípios de Clean Architecture, separação de responsabilidades e baixo acoplamento.
 
 ---
 
 ## Arquitetura do Projeto
 
-A solução segue uma arquitetura em camadas inspirada em **Clean Architecture / DDD (Domain-Driven Design)**, visando facilitar manutenção, testes e evolução do sistema.
-
-## Executar via Docker
-Executar comando no cmd na raiz do projeto:
-	docker compose up --build
-
-A solução segue uma arquitetura em camadas inspirada em **Clean Architecture / DDD (Domain-Driven Design)**, visando facilitar manutenção, testes e evolução do sistema.
-
+A solução segue uma estrutura em camadas inspirada em Clean Architecture / DDD, com separação entre API, aplicação, domínio e infraestrutura.
 
 ### Estrutura da solução
 
 ```txt
-FiapGames.Auth.sln
+FiapGames.Auth.slnx
 
 src/
-├── Auth.Api
-├── Auth.Application
-├── Auth.Infrastructure
-└── Auth.Domain
+├── 1-Auth.Api
+├── 2-Auth.Application
+├── 3-Auth.Infrastructure
+└── 4-Auth.Domain
 
 test/
 ├── Auth.Application.Test
@@ -37,125 +30,90 @@ test/
 
 ### Responsabilidades das camadas
 
-#### `Auth.Api`
+#### 1-Auth.Api
 
 Camada de exposição da API.
 
 Responsável por:
+- endpoints REST
+- autenticação e autorização JWT
+- Swagger/OpenAPI
+- middleware e pipeline HTTP
+- injeção de dependência
 
-* Endpoints REST
-* Configuração de autenticação/autorização
-* Swagger/OpenAPI
-* Middleware e pipeline HTTP
-* Configurações de DI (Dependency Injection)
-
-#### `Auth.Application`
+#### 2-Auth.Application
 
 Camada de aplicação.
 
 Responsável por:
+- regras de negócio
+- serviços de aplicação
+- DTOs
+- contratos de serviço
 
-* Regras de negócio da aplicação
-* Serviços de aplicação
-* Casos de uso
-* DTOs
-* Interfaces de contratos
-
-#### `Auth.Domain`
+#### 4-Auth.Domain
 
 Camada de domínio.
 
 Responsável por:
+- entidades
+- regras de domínio
+- contratos de repositório
+- regras independentes de framework
 
-* Entidades
-* Regras de domínio
-* Objetos de valor
-* Contratos centrais
-* Regras independentes de framework
-
-#### `Auth.Infrastructure`
+#### 3-Auth.Infrastructure
 
 Camada de infraestrutura.
 
 Responsável por:
-
-* Persistência de dados
-* Entity Framework Core
-* Contextos (`DbContext`)
-* Repositórios
-* Integrações externas
-* Implementações técnicas
-
-#### `Tests`
-
-Projetos de testes automatizados.
-
-Responsável por:
-
-* Testes unitários
-* Testes de regras de negócio
-* Garantia de qualidade do domínio e aplicação
+- persistência com Entity Framework Core
+- repositórios
+- integração com mensageria RabbitMQ
+- implementação de serviços técnicos
 
 ---
 
-## Principais Funcionalidades
+## Funcionalidades atuais
 
-Este microserviço é responsável por:
-
-* Cadastro de usuários
-* Autenticação de usuários
-* Login com e-mail e senha
-* Emissão de tokens JWT
-* Controle de acesso
-* CRUD de usuários
-* Validação de credenciais
-* Gerenciamento de status do usuário
+O microserviço implementa:
+- cadastro de usuários
+- autenticação por login e senha
+- emissão de tokens JWT
+- troca de senha
+- consulta de usuários por ID, e-mail e lista completa
+- atualização e remoção de usuários
+- integração com eventos de mensageria
 
 ---
 
 ## Stack Tecnológica
 
-* **.NET 9**
-* **ASP.NET Core Web API**
-* **Entity Framework Core**
-* **MySQL**
-* **JWT Authentication**
-* **Swagger / OpenAPI**
-* **xUnit** (testes)
+- .NET 10
+- ASP.NET Core Web API
+- Entity Framework Core
+- SQL Server
+- JWT Authentication
+- Swagger / OpenAPI
+- RabbitMQ
+- xUnit (testes)
 
 ---
 
-## Padrões Utilizados
+## Pré-requisitos
 
-O projeto segue alguns princípios e padrões arquiteturais:
+Antes de executar o projeto, certifique-se de ter instalado:
+- .NET SDK 10
+- SQL Server ou SQL Server LocalDB
+- RabbitMQ, caso deseje validar a integração de mensagens
+- dotnet-ef CLI
 
-* Clean Architecture
-* SOLID
-* Dependency Injection
-* Repository Pattern
-* Separation of Concerns
-* Domain-Oriented Design
-
----
-
-## Configuração do Ambiente
-
-### Pré-requisitos
-
-Antes de executar o projeto, certifique-se de possuir instalado:
-
-* .NET SDK 9+
-* MySQL
-* Visual Studio 2022+ ou Rider
-* EF Core CLI
-
-Instalação do Entity Framework CLI:
+Instalar o Entity Framework CLI:
 
 ```bash
 dotnet tool install --global dotnet-ef
 ```
 
-ou atualização:
+ou atualizar:
 
 ```bash
 dotnet tool update --global dotnet-ef
@@ -163,27 +121,26 @@ dotnet tool update --global dotnet-ef
 
 ---
 
-## Configuração do `appsettings.json`
+## Configuração do ambiente
 
-Exemplo de configuração:
+O projeto lê a string de conexão no arquivo de configuração da API. O valor padrão em appsettings.json usa LocalDB:
 
 ```json
 {
   "ConnectionStrings": {
-    "FIAPGamesConnection": "server=localhost;database=fiapgames_auth;user=root;password=sua_senha"
+    "FIAPGamesConnection": "Server=(localdb)\\mssqllocaldb;Database=fiapgames_auth;Trusted_Connection=True;MultipleActiveResultSets=true"
   },
-
   "Jwt": {
-    "Key": "sua-chave-super-secreta",
-    "Issuer": "FiapGames",
-    "Audience": "FiapGamesUsers"
+    "Key": "ChaveSuperSecretaFiapGamesEAD12MuitoLongaParaGarantirSeguranca123!",
+    "Issuer": "FiapGamesApi",
+    "Audience": "FiapGamesClients"
   }
 }
 ```
 
 ---
 
-## Executando o Projeto
+## Executando localmente
 
 Restaurar dependências:
 
@@ -194,8 +151,22 @@ dotnet restore
 Executar a aplicação:
 
 ```bash
-dotnet run --project src/Auth.Api
+dotnet run --project src/1-Auth.Api/1-Auth.Api.csproj
 ```
+
+A API ficará disponível em http://localhost:5195 ou https://localhost:7286, conforme o profile de execução configurado em launchSettings.json.
+
+---
+
+## Executando com Docker
+
+Na raiz do projeto, execute:
+
+```bash
+docker compose up --build
+```
+
+Esse ambiente sobe a API e o SQL Server. A aplicação também está preparada para usar RabbitMQ, mas o serviço de mensageria não é provisionado no compose atual.
 
 ---
 
@@ -205,23 +176,38 @@ Criar uma migration:
 
 ```bash
 dotnet ef migrations add InitialCreate \
---project src/Auth.Infrastructure \
---startup-project src/Auth.Api
+--project src/3-Auth.Infrastructure \
+--startup-project src/1-Auth.Api
 ```
 
 Aplicar migrations:
 
 ```bash
 dotnet ef database update \
---project src/Auth.Infrastructure \
---startup-project src/Auth.Api
+--project src/3-Auth.Infrastructure \
+--startup-project src/1-Auth.Api
 ```
+
+---
+
+## Endpoints principais
+
+A API expõe os seguintes endpoints:
+
+- POST /api/login
+- POST /api/auth/login
+- POST /api/auth/trocar-senha
+- GET /api/login/{id}
+- GET /api/login/email/{email}
+- GET /api/login
+- PUT /api/login
+- DELETE /api/login/{id}
 
 ---
 
 ## Testes
 
-Executar testes:
+Executar a suíte de testes:
 
 ```bash
 dotnet test
@@ -229,52 +215,6 @@ dotnet test
 
 ---
 
-## Convenções do Projeto
-
-### Nomenclatura
-
-#### Projetos
-
-```txt
-<Serviço>.Api
-<Serviço>.Application
-<Serviço>.Domain
-<Serviço>.Infrastructure
-```
-
-#### Testes
-
-```txt
-<Serviço>.Application.Test
-<Serviço>.Domain.Test
-```
-
-Essa convenção foi pensada para permitir reutilização da estrutura entre múltiplos microsserviços do ecossistema.
-
-Exemplo:
-
-```txt
-FiapGames.Auth
-FiapGames.Inventory
-FiapGames.Payment
-FiapGames.Matchmaking
-```
-
----
-
-## Roadmap
-
-Funcionalidades previstas:
-
-* Refresh Token
-* Recuperação de senha
-* Controle de perfis e permissões
-* Rate limiting
-* Observabilidade e logging
-* Integração com mensageria
-
----
-
 ## Licença
 
-Projeto desenvolvido para fins acadêmicos e evolução arquitetural da plataforma **FiapGames**.
+Projeto desenvolvido para fins acadêmicos e evolução arquitetural da plataforma FiapGames.
