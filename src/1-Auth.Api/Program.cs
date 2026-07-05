@@ -20,12 +20,19 @@ builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 
+var rabbitHost = builder.Configuration["RabbitMq:HostName"] ?? "localhost";
+var rabbitPort = int.TryParse(builder.Configuration["RabbitMq:Port"], out var parsedPort) ? parsedPort : 5672;
+var rabbitUser = builder.Configuration["RabbitMq:UserName"] ?? "guest";
+var rabbitPass = builder.Configuration["RabbitMq:Password"] ?? "guest";
+
 builder.Services.AddSingleton<IConnectionFactory>(sp => new ConnectionFactory
 {
-    HostName = "localhost",
-    Port = 5672,
-    UserName = "guest",
-    Password = "guest"
+    HostName = rabbitHost,
+    Port = rabbitPort,
+    UserName = rabbitUser,
+    Password = rabbitPass,
+    AutomaticRecoveryEnabled = true,
+    NetworkRecoveryInterval = TimeSpan.FromSeconds(10)
 });
 
 
@@ -37,6 +44,11 @@ builder.Services.AddScoped<IMessagePublisher, RabbitMqPublisher>();
 var connectionString = builder.Configuration.GetConnectionString("FIAPGamesConnection");
 
 var jwtKey = builder.Configuration["Jwt:Key"];
+if (string.IsNullOrWhiteSpace(jwtKey))
+{
+    throw new InvalidOperationException("Configuration key Jwt:Key is required.");
+}
+
 var keyBytes = Encoding.ASCII.GetBytes(jwtKey);
 
 builder.Services.AddAuthentication(options =>
@@ -124,6 +136,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
+app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
