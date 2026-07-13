@@ -7,7 +7,10 @@ namespace Services
 {
     public class LoginService(ILoginRepository loginRepository, IMessagePublisher _publisher) : ILoginService
     {
-        public async Task<CriarLoginDTO> CriarLogin(CriarLoginDTO loginDTO)
+        private const string NotificacaoRoutingKey = "autenticacao.notificacao";
+        private const string UsuarioRegistradoRoutingKey = "autenticacao.usuario.registrado";
+
+        public async Task<CriarLoginDTOResponse> CriarLogin(CriarLoginDTO loginDTO)
         {
             string senhaHash = BCrypt.Net.BCrypt.HashPassword(loginDTO.PasswordHash);
 
@@ -21,11 +24,22 @@ namespace Services
                 Assunto: "Bem-vindo ao FiapGames!",
                 CorpoMensagem: $"Olá {novoLogin.Nome}, sua conta foi criada com sucesso.",
                 DominioOrigem: "Autenticacao"
-        );
+            );
 
-            await _publisher.PublishAsync(eventoNotificacao, routingKey: "autenticacao.notificacao", eventoNotificacao.RastreioId);
+            var eventoUsuarioRegistrado = new UsuarioRegistradoIntegrationEvent(
+                IdLogin: novoLogin.IdLogin,
+                Nome: novoLogin.Nome,
+                Email: novoLogin.Email,
+                TipoUsuario: (int)novoLogin.TipoUsuario);
 
-            return loginDTO;
+            await _publisher.PublishAsync(eventoNotificacao, NotificacaoRoutingKey, eventoNotificacao.RastreioId);
+            await _publisher.PublishAsync(eventoUsuarioRegistrado, UsuarioRegistradoRoutingKey, Guid.NewGuid().ToString());
+
+            return new CriarLoginDTOResponse
+            (
+                novoLogin.Nome,
+                novoLogin.Email
+            );
         }
 
         public async Task<LerLoginDTO?> ObterLoginPorId(int id)

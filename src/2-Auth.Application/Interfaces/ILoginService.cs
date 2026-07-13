@@ -4,7 +4,7 @@ namespace Interfaces
 {
     public interface ILoginService
     {
-        Task<CriarLoginDTO> CriarLogin(CriarLoginDTO loginDTO);
+        Task<CriarLoginDTOResponse> CriarLogin(CriarLoginDTO loginDTO);
         Task<LerLoginDTO?> ObterLoginPorId(int id);
         Task<LerLoginDTO> ObterLoginPorEmail(string email);
         Task<IEnumerable<LerLoginDTO>> ObterLogins();

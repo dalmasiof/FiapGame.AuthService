@@ -12,7 +12,7 @@ namespace Controllers
         [HttpPost]
         public async Task<IActionResult> CriarLogin([FromBody] CriarLoginDTO loginDTO)
         {
-            CriarLoginDTO novoLogin = await loginService.CriarLogin(loginDTO);
+            CriarLoginDTOResponse novoLogin = await loginService.CriarLogin(loginDTO);
             return Ok(novoLogin);
         }
 
