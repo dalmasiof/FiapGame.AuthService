@@ -1,5 +1,6 @@
 ﻿using DTOs;
 using Interfaces;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Controllers
@@ -25,6 +26,7 @@ namespace Controllers
         }
 
         [HttpPost("trocar-senha")]
+        [Authorize]
         public async Task<IActionResult> TrocarSenha(TrocarSenhaDTO trocarSenha)
         {
             await loginService.TrocarSenhaAsync(trocarSenha);
