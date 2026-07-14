@@ -35,7 +35,6 @@ builder.Services.AddSingleton<IConnectionFactory>(sp => new ConnectionFactory
     NetworkRecoveryInterval = TimeSpan.FromSeconds(10)
 });
 
-
 builder.Services.AddScoped<ILoginRepository, LoginRepository>();
 builder.Services.AddScoped<ILoginService, LoginService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
