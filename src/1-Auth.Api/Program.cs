@@ -1,21 +1,44 @@
+using Azure.Extensions.AspNetCore.Configuration.Secrets;
+using Azure.Identity;
 using Context;
 using Interfaces;
 using Messaging;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
 using Middleware;
 using Repository;
 using Services;
 using System.Net;
-using System.Text;
 using RabbitMQ.Client;
 
 var builder = WebApplication.CreateBuilder(args);
 
+if (!builder.Environment.IsDevelopment())
+{
+    var keyVaultUriValue = Environment.GetEnvironmentVariable("KeyVaultUri");
+    if (!Uri.TryCreate(keyVaultUriValue, UriKind.Absolute, out var keyVaultUri) ||
+        keyVaultUri.Scheme != Uri.UriSchemeHttps)
+    {
+        throw new InvalidOperationException(
+            "Environment variable KeyVaultUri must contain a valid HTTPS URI.");
+    }
+
+    builder.Configuration.AddAzureKeyVault(
+        keyVaultUri,
+        new DefaultAzureCredential());
+}
+
 // Add services to the container.
 
+if (builder.Environment.IsDevelopment())
+{
+    builder.Services.AddDataProtection().UseEphemeralDataProtectionProvider();
+}
 builder.Services.AddControllers();
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
@@ -25,7 +48,7 @@ var rabbitPort = int.TryParse(builder.Configuration["RabbitMq:Port"], out var pa
 var rabbitUser = builder.Configuration["RabbitMq:UserName"] ?? "guest";
 var rabbitPass = builder.Configuration["RabbitMq:Password"] ?? "guest";
 
-builder.Services.AddSingleton<IConnectionFactory>(sp => new ConnectionFactory
+var rabbitConnectionFactory = new ConnectionFactory
 {
     HostName = rabbitHost,
     Port = rabbitPort,
@@ -33,7 +56,11 @@ builder.Services.AddSingleton<IConnectionFactory>(sp => new ConnectionFactory
     Password = rabbitPass,
     AutomaticRecoveryEnabled = true,
     NetworkRecoveryInterval = TimeSpan.FromSeconds(10)
-});
+};
+var rabbitHealthConnection = new Lazy<Task<IConnection>>(
+    () => rabbitConnectionFactory.CreateConnectionAsync());
+
+builder.Services.AddSingleton<IConnectionFactory>(rabbitConnectionFactory);
 
 builder.Services.AddScoped<ILoginRepository, LoginRepository>();
 builder.Services.AddScoped<ILoginService, LoginService>();
@@ -41,14 +68,21 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IMessagePublisher, RabbitMqPublisher>();
 
 var connectionString = builder.Configuration.GetConnectionString("FIAPGamesConnection");
-
-var jwtKey = builder.Configuration["Jwt:Key"];
-if (string.IsNullOrWhiteSpace(jwtKey))
+if (string.IsNullOrWhiteSpace(connectionString))
 {
-    throw new InvalidOperationException("Configuration key Jwt:Key is required.");
+    throw new InvalidOperationException(
+        "Connection string FIAPGamesConnection is required.");
 }
 
-var keyBytes = Encoding.ASCII.GetBytes(jwtKey);
+var privateKeyPem = builder.Configuration["Jwt:PrivateKey"];
+var privateKeyFile = builder.Configuration["Jwt:PrivateKeyFile"];
+if (string.IsNullOrWhiteSpace(privateKeyPem) && !string.IsNullOrWhiteSpace(privateKeyFile))
+{
+    privateKeyPem = await File.ReadAllTextAsync(privateKeyFile);
+}
+
+var rsaKeyProvider = new RsaKeyProvider(privateKeyPem ?? string.Empty);
+builder.Services.AddSingleton<IRsaKeyProvider>(_ => rsaKeyProvider);
 
 builder.Services.AddAuthentication(options =>
 {
@@ -62,7 +96,7 @@ builder.Services.AddAuthentication(options =>
     options.TokenValidationParameters = new TokenValidationParameters
     {
         ValidateIssuerSigningKey = true,
-        IssuerSigningKey = new SymmetricSecurityKey(keyBytes),
+        IssuerSigningKey = rsaKeyProvider.ValidationKey,
         ValidateIssuer = true,
         ValidIssuer = builder.Configuration["Jwt:Issuer"],
         ValidateAudience = true,
@@ -99,6 +133,14 @@ builder.Services.AddDbContext<AuthContext>(opts =>
     .UseLazyLoadingProxies()
     .UseSqlServer(connectionString));
 
+builder.Services.AddHealthChecks()
+    .AddCheck("self", () => HealthCheckResult.Healthy(), tags: ["live"])
+    .AddSqlServer(connectionString, name: "sqlserver", tags: ["ready"])
+    .AddRabbitMQ(
+        _ => rabbitHealthConnection.Value,
+        name: "rabbitmq",
+        tags: ["ready"]);
+
 builder.Services.AddControllers()
     .ConfigureApiBehaviorOptions(options =>
     {
@@ -124,27 +166,42 @@ builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
+if (args.Contains("--migrate", StringComparer.OrdinalIgnoreCase))
+{
+    using var scope = app.Services.CreateScope();
+    var context = scope.ServiceProvider.GetRequiredService<AuthContext>();
+
+    await context.Database.MigrateAsync();
+    await DbInitializer.SeedAsync(context);
+
+    Console.WriteLine("Auth database migrations and seeds applied successfully.");
+    return;
+}
+
 app.UseMiddleware<ExceptionMiddleware>();
 
 
+app.UseSwagger();
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+app.UseWhen(
+    context => !context.Request.Path.StartsWithSegments("/health"),
+    branch => branch.UseHttpsRedirection());
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
-
-
-using (var scope = app.Services.CreateScope())
+app.MapHealthChecks("/health/live", new HealthCheckOptions
 {
-    var context = scope.ServiceProvider.GetRequiredService<AuthContext>();
-    await DbInitializer.SeedAsync(context);
-}
+    Predicate = check => check.Tags.Contains("live")
+});
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready")
+});
 
 app.Run();

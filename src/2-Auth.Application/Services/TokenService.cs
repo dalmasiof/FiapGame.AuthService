@@ -4,17 +4,16 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
-using System.Text;
 
 namespace Services
 {
-    public class TokenService(IConfiguration config) : ITokenService
+    public class TokenService(
+        IConfiguration config,
+        IRsaKeyProvider rsaKeyProvider) : ITokenService
     {
         public string GerarToken(LerLoginDTO login)
         {
             var tokenHandler = new JwtSecurityTokenHandler();
-            var key = Encoding.ASCII.GetBytes(config["Jwt:Key"]);
-
             var claims = new[]
             {
                 new Claim(ClaimTypes.NameIdentifier, login.IdLogin.ToString()),
@@ -28,9 +27,7 @@ namespace Services
                 Expires = DateTime.UtcNow.AddHours(1),
                 Issuer = config["Jwt:Issuer"],
                 Audience = config["Jwt:Audience"],
-                SigningCredentials = new SigningCredentials(
-                    new SymmetricSecurityKey(key), 
-                    SecurityAlgorithms.HmacSha256Signature)
+                SigningCredentials = rsaKeyProvider.SigningCredentials
             };
 
             var token = tokenHandler.CreateToken(tokenDescriptor);
