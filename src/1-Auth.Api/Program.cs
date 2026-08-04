@@ -67,11 +67,11 @@ builder.Services.AddScoped<ILoginService, LoginService>();
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IMessagePublisher, RabbitMqPublisher>();
 
-var connectionString = builder.Configuration.GetConnectionString("FIAPGamesConnection");
+var connectionString = builder.Configuration.GetConnectionString("AuthConnection");
 if (string.IsNullOrWhiteSpace(connectionString))
 {
     throw new InvalidOperationException(
-        "Connection string FIAPGamesConnection is required.");
+        "Connection string AuthConnection is required.");
 }
 
 var privateKeyPem = builder.Configuration["Jwt:PrivateKey"];

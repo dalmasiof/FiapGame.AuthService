@@ -10,7 +10,7 @@ services:
       - "8081:8081"
     environment:
       ASPNETCORE_ENVIRONMENT: Development
-      ConnectionStrings__FIAPGamesConnection: "Server=sqlserver-auth,1433;Database=fiapgames_auth;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True"
+      ConnectionStrings__AuthConnection: "Server=sqlserver-auth,1433;Database=fiapgames_auth;User Id=sa;Password=YourStrong@Passw0rd;TrustServerCertificate=True"
       Jwt__Key: "ChaveSuperSecretaFiapGamesEAD12MuitoLongaParaGarantirSeguranca123!"
       Jwt__Issuer: "FiapGamesApi"
       Jwt__Audience: "FiapGamesClients"
