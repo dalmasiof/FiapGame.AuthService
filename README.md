@@ -1,5 +1,24 @@
 # FiapGames.Auth
 
+## Producao no Azure
+
+O servico esta publicado no Azure Container Apps e recebe trafego externo somente pelo Azure API Management:
+
+```text
+https://apim-fiapgames-prod.azure-api.net/users
+```
+
+Rotas publicas principais:
+
+- `POST /users/api/Auth/login`: autenticacao e emissao do JWT.
+- `POST /users/api/Login`: cadastro de usuario.
+- `GET /users/.well-known/jwks`: chave publica RSA em formato JWKS.
+- `GET /users/.well-known/openid-configuration`: discovery JWT.
+
+As demais rotas exigem JWT RS256. A chave privada e as connection strings sao carregadas do Azure Key Vault por `DefaultAzureCredential`. O Container App aceita requisicoes externas apenas do IP do APIM.
+
+O deploy ocorre por `.github/workflows/deploy-production.yml`: build e push no ACR, execucao isolada com `--migrate` e atualizacao da revisao somente apos a migration concluir. As sondas sao `/health/live` e `/health/ready`.
+
 Microserviço responsável por autenticação, autorização e gerenciamento de usuários da plataforma FiapGames.
 
 Este serviço centraliza funcionalidades de identidade, emissão e validação de tokens JWT, login, cadastro e manutenção de contas do ecossistema.
