@@ -11,7 +11,11 @@ public sealed class OpenIdConfigurationController(IConfiguration configuration) 
     [HttpGet]
     public IActionResult Get()
     {
-        var baseUrl = $"{Request.Scheme}://{Request.Host}{Request.PathBase}";
+        var forwardedScheme = Request.Headers["X-Forwarded-Proto"].FirstOrDefault();
+        var scheme = string.IsNullOrWhiteSpace(forwardedScheme)
+            ? Request.Scheme
+            : forwardedScheme.Split(',', StringSplitOptions.TrimEntries)[0];
+        var baseUrl = $"{scheme}://{Request.Host}{Request.PathBase}";
 
         return Ok(new
         {
