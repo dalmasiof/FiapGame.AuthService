@@ -11,6 +11,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.IdentityModel.Tokens;
 using Middleware;
+using Prometheus;
 using Repository;
 using Services;
 using System.Net;
@@ -179,6 +180,7 @@ if (args.Contains("--migrate", StringComparer.OrdinalIgnoreCase))
 }
 
 app.UseMiddleware<ExceptionMiddleware>();
+app.UseHttpMetrics();
 
 
 app.UseSwagger();
@@ -195,6 +197,7 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
+app.MapMetrics("/metrics");
 app.MapHealthChecks("/health/live", new HealthCheckOptions
 {
     Predicate = check => check.Tags.Contains("live")
