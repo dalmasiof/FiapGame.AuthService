@@ -34,6 +34,8 @@ if (!builder.Environment.IsDevelopment())
         new DefaultAzureCredential());
 }
 
+builder.Configuration.AddEnvironmentVariables();
+
 // Add services to the container.
 
 if (builder.Environment.IsDevelopment())

@@ -150,7 +150,7 @@ O projeto lê a string de conexão no arquivo de configuração da API. O valor 
     "FIAPGamesConnection": "Server=(localdb)\\mssqllocaldb;Database=fiapgames_auth;Trusted_Connection=True;MultipleActiveResultSets=true"
   },
   "Jwt": {
-    "Key": "ChaveSuperSecretaFiapGamesEAD12MuitoLongaParaGarantirSeguranca123!",
+    "Key": "${AUTH_JWT_KEY}",
     "Issuer": "FiapGamesApi",
     "Audience": "FiapGamesClients"
   }
