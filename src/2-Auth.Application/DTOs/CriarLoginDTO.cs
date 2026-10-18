@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations;
 
 namespace DTOs
 {
@@ -13,7 +13,6 @@ namespace DTOs
         [Required(ErrorMessage = "A senha é obrigatória.")]
         [RegularExpression(@"^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&#])[A-Za-z\d@$!%*?&#]{8,}$",
             ErrorMessage = "A senha deve ter no mínimo 8 caracteres, contendo letras maiúsculas, minúsculas, números e pelo menos um caractere especial.")]
-        string PasswordHash,
-        int TipoUsuario
+        string PasswordHash
         );
 }

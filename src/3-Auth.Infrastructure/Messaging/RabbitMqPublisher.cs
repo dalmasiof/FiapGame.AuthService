@@ -2,7 +2,6 @@ using Azure.Identity;
 using Azure.Messaging.ServiceBus;
 using Interfaces;
 using Microsoft.Extensions.Configuration;
-using Microsoft.Extensions.Hosting;
 using RabbitMQ.Client;
 using System.Text.Json;
 
@@ -18,7 +17,7 @@ public class RabbitMqPublisher : IMessagePublisher, IAsyncDisposable
 
     private const string ExchangeName = "notificacao.exchange";
 
-    public RabbitMqPublisher(IConnectionFactory connectionFactory, IConfiguration configuration, IHostEnvironment environment)
+    public RabbitMqPublisher(IConnectionFactory connectionFactory, IConfiguration configuration)
     {
         _connectionFactory = connectionFactory;
         var fullyQualifiedNamespace = configuration["ServiceBus:FullyQualifiedNamespace"];
@@ -26,10 +25,6 @@ public class RabbitMqPublisher : IMessagePublisher, IAsyncDisposable
         {
             _serviceBusClient = new ServiceBusClient(fullyQualifiedNamespace, new DefaultAzureCredential());
             _notificationSender = _serviceBusClient.CreateSender("notification-authentication");
-        }
-        else if (environment.IsProduction())
-        {
-            throw new InvalidOperationException("ServiceBus:FullyQualifiedNamespace is required in Production.");
         }
     }
 

@@ -1,4 +1,4 @@
-﻿using DTOs;
+using DTOs;
 using Entities;
 using IntegrationEvents;
 using Interfaces;
@@ -14,7 +14,7 @@ namespace Services
         {
             string senhaHash = BCrypt.Net.BCrypt.HashPassword(loginDTO.PasswordHash);
 
-            var novoLogin = new Login(loginDTO.Nome, loginDTO.Email, senhaHash, (int)loginDTO.TipoUsuario);
+            var novoLogin = new Login(loginDTO.Nome, loginDTO.Email, senhaHash, (int)TIPO_USUARIO.Usuario);
 
             await loginRepository.AdicionarLogin(novoLogin);
 

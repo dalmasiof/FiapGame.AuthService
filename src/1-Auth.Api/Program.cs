@@ -175,7 +175,7 @@ if (args.Contains("--migrate", StringComparer.OrdinalIgnoreCase))
     var context = scope.ServiceProvider.GetRequiredService<AuthContext>();
 
     await context.Database.MigrateAsync();
-    await DbInitializer.SeedAsync(context);
+    await DbInitializer.SeedAsync(context, app.Configuration);
 
     Console.WriteLine("Auth database migrations and seeds applied successfully.");
     return;
