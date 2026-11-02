@@ -1,5 +1,6 @@
 using DTOs;
 using Entities;
+using Exceptions;
 using IntegrationEvents;
 using Interfaces;
 
@@ -12,6 +13,9 @@ namespace Services
 
         public async Task<CriarLoginDTOResponse> CriarLogin(CriarLoginDTO loginDTO)
         {
+            if (await loginRepository.ObterLoginPorEmail(loginDTO.Email) is not null)
+                throw new EmailJaCadastradoException();
+
             string senhaHash = BCrypt.Net.BCrypt.HashPassword(loginDTO.PasswordHash);
 
             var novoLogin = new Login(loginDTO.Nome, loginDTO.Email, senhaHash, (int)TIPO_USUARIO.Usuario);

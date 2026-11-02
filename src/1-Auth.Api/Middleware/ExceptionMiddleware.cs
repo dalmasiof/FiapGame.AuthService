@@ -1,5 +1,6 @@
 ﻿using System.Net;
 using System.Text.Json;
+using Exceptions;
 namespace Middleware
 {
     public class ExceptionMiddleware
@@ -29,12 +30,21 @@ namespace Middleware
 
         private async Task HandleExceptionAsync(HttpContext context, Exception ex)
         {
-            _logger.LogError(
-                "Request failed with {ExceptionType} for {Method} {Path}. TraceId: {TraceId}",
-                ex.GetType().Name,
-                context.Request.Method,
-                context.Request.Path,
-                context.TraceIdentifier);
+            if (ex is EmailJaCadastradoException)
+            {
+                _logger.LogWarning(
+                    "Registration rejected because the email is already registered. TraceId: {TraceId}",
+                    context.TraceIdentifier);
+            }
+            else
+            {
+                _logger.LogError(
+                    "Request failed with {ExceptionType} for {Method} {Path}. TraceId: {TraceId}",
+                    ex.GetType().Name,
+                    context.Request.Method,
+                    context.Request.Path,
+                    context.TraceIdentifier);
+            }
 
             context.Response.ContentType = "application/json";
 
@@ -43,6 +53,8 @@ namespace Middleware
                 UnauthorizedAccessException => new ErroResponseDto("Acesso não autorizado", HttpStatusCode.Unauthorized),
 
                 ArgumentException => new ErroResponseDto($"Requisição inválida: {ex.Message}", HttpStatusCode.BadRequest),
+
+                EmailJaCadastradoException => new ErroResponseDto(ex.Message, HttpStatusCode.Conflict),
 
                 _ => new ErroResponseDto("Erro interno do servidor", HttpStatusCode.InternalServerError)
             };
