@@ -10,7 +10,16 @@ namespace Repository
         public async Task AdicionarLogin(Login login)
         {
             await _context.Logins.AddAsync(login);
-            await _context.SaveChangesAsync();
+            try
+            {
+                await _context.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex) when (
+                ex.GetBaseException() is Microsoft.Data.SqlClient.SqlException sqlException &&
+                sqlException.Number is 2601 or 2627)
+            {
+                throw new Exceptions.EmailJaCadastradoException();
+            }
         }
 
         public async Task AtualizarLogin(Login login)
