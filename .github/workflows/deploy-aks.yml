@@ -52,6 +52,16 @@ jobs:
             --name "$AKS_CLUSTER_NAME" \
             --overwrite-existing
 
+      - name: Verify RabbitMQ runtime secret
+        run: |
+          set -euo pipefail
+          if ! kubectl get secret rabbitmq-auth \
+            -o go-template='{{if and .data.username .data.password}}present{{end}}' \
+            | grep -qx present; then
+            echo "Kubernetes Secret rabbitmq-auth is missing or incomplete. Run scripts/resume-environment.ps1 in FiapGames.InfraOrchestrator to sync it from Key Vault." >&2
+            exit 1
+          fi
+
       - name: Log in to ACR
         run: az acr login --name "${ACR_LOGIN_SERVER%%.*}"
 
@@ -62,19 +72,6 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: ${{ env.ACR_LOGIN_SERVER }}/${{ env.IMAGE_NAME }}:${{ github.sha }}
-
-      - name: Create RabbitMQ runtime secret
-        env:
-          RABBITMQ_USER: ${{ secrets.RABBITMQ_USERNAME }}
-          RABBITMQ_PASSWORD: ${{ secrets.RABBITMQ_PASSWORD }}
-        run: |
-          set -euo pipefail
-          : "${RABBITMQ_USER:?Configure RABBITMQ_USERNAME in GitHub Actions secrets}"
-          : "${RABBITMQ_PASSWORD:?Configure RABBITMQ_PASSWORD in GitHub Actions secrets}"
-          kubectl create secret generic rabbitmq-auth \
-            --from-literal=username="$RABBITMQ_USER" \
-            --from-literal=password="$RABBITMQ_PASSWORD" \
-            --dry-run=client -o yaml | kubectl apply -f -
 
       - name: Apply config and run database migration
         run: |
